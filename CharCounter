@@ -1,0 +1,75 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+
+public class CharCounter implements ICharCounter{
+	//private TreeMap<Integer, Integer> charTree;
+	//private TreeNode huffTree; // remains empty until ASSIGNED to the built fancy tree
+	//private TreeMaker treeMaker;
+	private int[] charWeight;
+	
+	public CharCounter()
+	{
+		charWeight = new int[IHuffConstants.ALPH_SIZE];
+		//charTree = new TreeMap<Integer, Integer>();
+		//treeMaker = new TreeMaker(charTree);
+	}
+	
+	
+	/**
+     * Returns the count associated with specified character.
+     * @param ch is the chunk/character for which count is requested
+     * @return count of specified chunk
+     * @throws some kind of exception if ch isn't a valid chunk/character
+     */
+    public int getCount(int ch){
+    	return(charWeight[ch]);
+    }
+    
+    /**
+     * Initialize state by counting bits/chunks in a stream
+     * @param stream is source of data
+     * @return count of all chunks/read
+     * @throws IOException if reading fails
+     */
+    public int countAll(InputStream stream) throws IOException{
+    	BitInputStream input = new BitInputStream(stream);
+    	int next;
+    	int counter = 0;
+    	while((next = input.read(IHuffConstants.BITS_PER_WORD)) != -1){
+    		charWeight[next]++;
+    		counter += Integer.bitCount(next);
+    	}
+    	return counter;
+    }
+    
+    /**
+     * Update state to record one occurrence of specified chunk/character.
+     * @param i is the chunk being recorded
+     */
+    public void add(int i){
+    	charWeight[i]++;
+    }
+    
+    /**
+     * Set the value/count associated with a specific character/chunk.
+     * @param i is the chunk/character whose count is specified
+     * @param value is # occurrences of specified chunk
+     */
+    public void set(int i, int value){
+    	charWeight[i]=value;
+    }
+    
+    /**
+     * All counts cleared to zero.
+     */
+    public void clear(){
+    	for(int k = 0; k<charWeight.length; k++)
+    	{
+    		charWeight[k]=0;
+    	}
+    }
+
+}
