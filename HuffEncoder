@@ -1,0 +1,47 @@
+
+public class HuffEncoder implements IHuffEncoder{
+	String[] codes;
+	
+	
+	public HuffEncoder(){
+		codes = new String[IHuffConstants.ALPH_SIZE];
+	}
+	/**
+     * Initialize state from a tree, the tree is obtained
+     * from the treeMaker.
+     * @param treeMaker used to generate tree for creating table/map.
+     */
+    public void makeTable(ITreeMaker treeMaker){
+    	System.out.println("In makeTable method of HuffEncoder");
+    	TreeNode temp = treeMaker.makeRoot();
+    	System.out.println("root node: " + temp.toString());
+    	makeCode(temp, new String(""));
+    	
+    }
+    
+    private void makeCode(TreeNode node, String stringy){
+    	if(node.myLeft==null && node.myRight==null){
+    		codes[node.myValue]= stringy; 
+    		return;
+    	}
+    	if(node.myLeft != null){
+    		makeCode(node.myLeft, stringy + "0");
+    	}
+    	if(node.myRight != null){
+    		makeCode(node.myRight, stringy + "1");
+    	}
+    }
+    
+    /**
+     * Returns coding, e.g., "010111" for specified chunk/character. It
+     * is an error to call this method before makeTable has been
+     * called.
+     * @param i is the chunk for which the coding is returned
+     * @return the huff encoding for the specified chunk
+     */
+    public String getCode(int i){
+    	//optional print of codes[i]
+    	return (codes[i]); 
+    }
+
+}
