@@ -1,0 +1,53 @@
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeMap;
+
+
+public class TreeMaker implements ITreeMaker{
+	private TreeNode charTree;
+	private CharCounter charCount;
+	
+	public TreeMaker(CharCounter counter){
+		charCount = counter;
+	}
+	/**
+     * Return the root of a Huffman/coding tree.
+     * @return root of a tree
+     */
+    public TreeNode makeRoot(){
+    	List<TreeNode> nodes = new ArrayList(); //LIST OF treenodes
+    	//System.out.println("In makeRoot of TreeMaker");
+    	for(int k = 0; k<IHuffConstants.ALPH_SIZE; k++){ //loop thru all 255 possible ascii values
+    		//System.out.println("In 255 loop of makeRoot, k = " + k);
+    		if(charCount.getCount(k) >0) //if the charcounter knows that the ascii value is represented at least once
+    		{
+    			System.out.println(k + " exists, count is " +charCount.getCount(k));
+    			nodes.add(new TreeNode(k, charCount.getCount(k))); //then add a node to the list that has the ascii value
+    			//and the weight
+    		}
+    	}
+    	
+    	System.out.println("exited 255 loop of makeRoot");
+    	PriorityQueue queue = new PriorityQueue(nodes); //make a priorityqueue out of the list of nodes
+    	TreeNode first; 
+    	TreeNode second;
+    	while(queue.size()>1){ //while the list has at least 2 nodes in it
+    		//System.out.println("In queue size>2 loop, size is " + queue.size());
+    		first = (TreeNode)queue.remove(); //take the least node from the list
+    		second = (TreeNode)queue.remove(); //take the next least node from the list
+    		TreeNode newHead = new TreeNode(-1, first.myWeight+second.myWeight, first, second);
+    		//System.out.println("new node from two least nodes is: " );
+    		//System.out.println(newHead.toString());
+    		queue.add(newHead); //re-add a node with the value of -1 
+    		//and the left and right children the nodes it comes from
+    	}
+    	charTree = (TreeNode)queue.remove();
+    	return charTree; //once there is only 1 node left in the queue return it
+    }
+    
+    public TreeNode getRoot(){
+    	return charTree;
+    }
+
+}
