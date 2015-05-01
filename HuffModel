@@ -1,0 +1,294 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.*;
+
+
+
+public class HuffModel implements IHuffModel{
+	HuffViewer view;
+	CharCounter charCounter;
+	//TreeMap<Integer, Integer> binaryMap = new TreeMap<Integer, Integer>();
+	TreeMaker treeMaker;
+	List<String> encodings;
+	
+	public HuffModel(HuffViewer viewer)
+	{
+		view = viewer;
+		view.setModel(this);
+		charCounter = new CharCounter();
+		treeMaker = new TreeMaker(charCounter);
+	}
+	
+	
+	/**
+     * Display all encodings (via the associated view).
+     */
+	public void showCodings(){
+		HuffEncoder encoder = new HuffEncoder();
+        encoder.makeTable(treeMaker); 
+        
+        //List<String> 
+        encodings = new ArrayList();
+        
+        for (int k = 0; k < IHuffConstants.ALPH_SIZE; k++)
+        {
+            encodings.add(k + " ");
+            if (encoder.getCode(k) != null)
+            {
+                encodings.set(k, k + " " + encoder.getCode(k));
+            }
+        }
+        view.update(encodings);
+	}
+	
+	 /**
+     * Display all chunk/character counts (via the associated view).
+     */
+	public void showCounts(){
+		List buddies = new ArrayList(255);
+		for(int k = 0; k<IHuffConstants.ALPH_SIZE; k++){
+			buddies.add(k + " " + charCounter.getCount(k)); 
+		}
+		view.update(buddies);
+		
+	}
+	
+	 /**
+     * Initialize state via an input stream. The stream most
+     * likely comes from a view, it's NOT a BitInputStream
+     * @param stream is an input stream for initializing state of this model
+     */
+	public void initialize(InputStream stream){
+		try{
+		charCounter.countAll(stream);
+		}catch(IOException e){
+			System.out.println("IOException e");
+		}
+		
+	}
+	
+	public void write(InputStream stream, File file, boolean force){
+		/*if force == true
+		 * then
+		 *write a compressed file based on the encodings
+		 *three steps, from the information your code found in Part I (the counts and encodings).
+		 */			
+		 /*
+		 *Write a magic number at the beginning of the compressed file. 
+		 *
+		 *
+		 *your code uses the magic number to determine if a compressed file was created by your program when uncompressing.
+		 *This could be any number of bits that are specifically written 
+		 *as the first N bits of a huffman-compressed file (for some N). 
+		 *The corresponding decompression program first reads N bits, 
+		 *if the bits do not represent the "magic number" then the compressed file is not properly formed. 
+		 *You can read/write bits using the classes declared in the BitInputStream and BitOutputStream classes.
+		 *implements the IHuffHeader interface:
+		 **/    
+		
+		byte dataToWrite[]; //you can make an array and add to it and then write it all at once
+		//at the end
+		//or you can just add it individually? im unclear
+		FileOutputStream out;
+		try{
+		out = new FileOutputStream("Test.txt");
+		out.write(IHuffConstants.MAGIC_NUMBER);
+		//file.write(IHuffConstants.BITS_PER_INT, IHuffConstants.MAGIC_NUMBER);
+		
+		
+		/*
+		 *Write information after the magic number that allows the Huffman tree to be recreated
+		 * One useful technique is to write the tree to the file using a preorder traversal. 
+		 * write a separate recursive method that builds a string and hands it back??
+		 * You can use a 0 or 1 bit to differentiate between internal nodes and leaves, for example. 
+		 * The leaves must store character values (in the general case using 9-bits because of the pseudo-eof character).
+		*/ 
+		/*
+		private static void serializeTree(HuffmanNode node) throws FileNotFoundException, IOException {
+        final BitSet bitSet = new BitSet();
+        try (ObjectOutputStream oosTree = new ObjectOutputStream(new FileOutputStream("/Users/ap/Desktop/tree"))) {
+            try (ObjectOutputStream oosChar = new ObjectOutputStream(new FileOutputStream("/Users/ap/Desktop/char"))) {
+                IntObject o = new IntObject();
+                preOrder(node, oosChar, bitSet, o);
+                bitSet.set(o.bitPosition, true); // padded to mark end of bit set relevant for deserialization.
+                oosTree.writeObject(bitSet);
+            }
+        }
+    }
+		 */
+		 try {
+			 if(out !=null){
+				 BitSet binary = new BitSet(); //bitset representing the binary value of the existing bits
+				 String header = (stringTree(treeMaker.getRoot(), new StringBuffer())).toString();
+				 binary= getBitSet(header);
+				 System.out.println("This is the header: ");
+				 
+				for(int k = 0; k<binary.length(); k++){
+					if(binary.get(k)==true){
+						out.write(1);
+						System.out.println("1");
+					}
+					else{
+						out.write(0);
+						System.out.println("0");
+					}
+				}
+				System.out.println("This is the end of the header.");
+			 }
+		} catch (NumberFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+		 
+		 /*
+			 *Write the bits needed to encode each character of the input file. 
+			 *For example, if the coding for 'a' is "01011" then your code will have to write 5 bits, 
+			 *in the order 0, 1, 0, 1, 1 every time the program is compressing/encoding the chunk 'a'.
+			 *
+			 *
+			 *read each character from the file
+			 *get coding from arraylist.get(char)
+			 *write in coding
+			 *continue until end of file
+			 */
+		 /*
+		  * 
+		  */
+		 StringBuilder outString = new StringBuilder();
+		 int b = stream.available();
+		 System.out.println("Stream.available(): " + b);
+		 HuffEncoder encoder = new HuffEncoder();
+	     encoder.makeTable(treeMaker);
+		 for(int k = 0; k<b; k++){
+			 
+		     int nextByte = stream.read();
+		     System.out.println("next byte is: " + nextByte);
+		     String code = encoder.getCode(nextByte);
+		     outString.append(code);
+		     System.out.println("code for byte: " + code);
+			 //byte[] optimalEncoding = encoding.getBytes();
+			 
+		 }
+		 BitSet codeString = getBitSet(outString.toString());
+		 System.out.println("Compressed file: ");
+		 for(int k = 0; k< codeString.length(); k++){
+			 if(codeString.get(k)==true){
+					out.write(1);
+					System.out.print("1");
+				}
+				else{
+					out.write(0);
+					System.out.print("0");
+				} 
+		 }
+		 
+		 
+		 out.write(IHuffConstants.PSEUDO_EOF);
+		 System.out.println(IHuffConstants.PSEUDO_EOF);
+		 
+		 
+		//out.close();
+		}catch(IOException e){
+			System.out.println(e.toString());
+		}
+	
+		
+	}
+	
+	/*
+	private static void serializeMessage(String message) throws IOException {
+        final BitSet bitSet = getBitSet(message);
+        bitSet.
+
+        try{
+        	FileOutputStream oos = new FileOutputStream("Test.txt");
+        	 oos.write(bitSet);
+        }catch(IOException e){
+  
+        } 
+    }
+    */
+	
+	private static BitSet getBitSet(String message) {
+        final BitSet bitSet = new BitSet();
+        int i = 0;
+        for (i = 0; i < message.length(); i++) {
+            if (message.charAt(i) == '0') {
+                bitSet.set(i, false);
+            } else {
+                bitSet.set(i, true);
+            }
+        }
+        bitSet.set(i, true);  
+        return bitSet;
+    }
+	
+	private StringBuffer stringTree(TreeNode root, StringBuffer progress){
+		//if root is null return
+		if(root == null)
+			return progress;
+		//if it is a leaf, we need to store the binary value
+		if(root.myRight == null && root.myLeft == null){
+			progress.append("1" + root.myValue);
+			return progress;
+		}
+		else if(root.myLeft != null)
+			stringTree(root.myLeft, progress.append("0"));
+		else if(root.myRight !=null)
+			stringTree(root.myRight, progress.append("0"));
+		return progress;
+	}
+	
+	public void setViewer(HuffViewer viewer){
+		view = viewer;
+	}
+	
+	public void uncompress(InputStream in, OutputStream out){
+		/*
+		 * read magic number
+		 */
+		int magic = 0;
+		try{
+	     magic = in.read();
+		}catch(IOException e){
+			System.out.println(e.toString());
+		}
+	     if (magic != MAGIC_NUMBER){
+	    	 try {
+				throw new IOException("magic number not right");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} //sometimes eclipse is pretty sick
+	     }
+	     
+	     
+		/* 
+		 * read tree, construct tree
+		 */ 
+	     
+		 /* 
+		 * follow tree w binary
+		 * every time you hit a leaf
+		 * write char in 
+		 * continue until u hit pseudo eof
+		 * leave 
+		 */
+		
+		
+		
+		
+	}
+
+}
