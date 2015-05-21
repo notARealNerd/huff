@@ -1,0 +1,26 @@
+
+public class SimpleTreeNode {
+
+		private int myBits;
+		private int myCount;
+	    public SimpleTreeNode(int bits, int count)
+	    {
+	    	myBits = bits;
+	    	myCount = count;
+	    }
+	    public SimpleTreeNode()
+	    {
+	    }
+	    public void SetBits(int bits)
+	    {
+	    	myBits = bits;
+	    }
+	    public void SetCount(int count)
+	    {
+	    	myCount = count;
+	    }
+	    public int getBits() {return myBits;}
+	    
+	    public int getCount() {return myCount;}
+	    
+}
