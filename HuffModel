@@ -14,12 +14,19 @@ import java.util.*;
 public class HuffModel implements IHuffModel{
 	HuffViewer view;
 	CharCounter charCounter;
-	//TreeMap<Integer, Integer> binaryMap = new TreeMap<Integer, Integer>();
 	TreeMaker treeMaker;
-	List<String> encodings;
+	//ArrayList<String> encodings1;
+	private PriorityQueue encodings; //huffTree
+	public final int EOF = 256;
+	public SimpleTreeNode nodeTable[]; //encodeTable
+
+
 	
 	public HuffModel(HuffViewer viewer)
 	{
+		nodeTable = new SimpleTreeNode[EOF+1];
+		System.out.println(nodeTable[103]);
+		System.out.println(nodeTable);
 		view = viewer;
 		view.setModel(this);
 		charCounter = new CharCounter();
@@ -33,19 +40,32 @@ public class HuffModel implements IHuffModel{
 	public void showCodings(){
 		HuffEncoder encoder = new HuffEncoder();
         encoder.makeTable(treeMaker); 
-        
-        //List<String> 
-        encodings = new ArrayList();
+
+        ArrayList<String> encodings1 = new ArrayList(256);
+        //System.out.println(encodings1.size());
+        for(int k = 0; k<256; k++){
+        	encodings1.add(k, "");
+        }
+       // System.out.println(encodings1.size());
+
         
         for (int k = 0; k < IHuffConstants.ALPH_SIZE; k++)
         {
-            encodings.add(k + " ");
-            if (encoder.getCode(k) != null)
+            if (nodeTable[k] != null)
             {
-                encodings.set(k, k + " " + encoder.getCode(k));
+            	/*
+            	System.out.println(IHuffConstants.ALPH_SIZE);
+            	System.out.println(encodings1.size());
+            	System.out.println(k);
+            	*/
+            	System.out.println("encoder.getCode(k): " + encoder.getCode(k));
+            
+                
+                //encodings1.add(k, k + " " + nodeTable[k].getBits() + " at " + nodeTable[k].getCount() + " bits.");
+                encodings1.add(k, encoder.getCode(k));
             }
         }
-        view.update(encodings);
+        view.update(encodings1);
 	}
 	
 	 /**
@@ -68,157 +88,36 @@ public class HuffModel implements IHuffModel{
 	public void initialize(InputStream stream){
 		try{
 		charCounter.countAll(stream);
+		charCounter.set(EOF , 1);
 		}catch(IOException e){
 			System.out.println("IOException e");
 		}
-		
+		buildHuffTree();
 	}
 	
 	public void write(InputStream stream, File file, boolean force){
-		/*if force == true
-		 * then
-		 *write a compressed file based on the encodings
-		 *three steps, from the information your code found in Part I (the counts and encodings).
-		 */			
-		 /*
-		 *Write a magic number at the beginning of the compressed file. 
-		 *
-		 *
-		 *your code uses the magic number to determine if a compressed file was created by your program when uncompressing.
-		 *This could be any number of bits that are specifically written 
-		 *as the first N bits of a huffman-compressed file (for some N). 
-		 *The corresponding decompression program first reads N bits, 
-		 *if the bits do not represent the "magic number" then the compressed file is not properly formed. 
-		 *You can read/write bits using the classes declared in the BitInputStream and BitOutputStream classes.
-		 *implements the IHuffHeader interface:
-		 **/    
-		
-		byte dataToWrite[]; //you can make an array and add to it and then write it all at once
-		//at the end
-		//or you can just add it individually? im unclear
-		FileOutputStream out;
 		try{
-		out = new FileOutputStream("Test.txt");
-		out.write(IHuffConstants.MAGIC_NUMBER);
-		//file.write(IHuffConstants.BITS_PER_INT, IHuffConstants.MAGIC_NUMBER);
-		
-		
-		/*
-		 *Write information after the magic number that allows the Huffman tree to be recreated
-		 * One useful technique is to write the tree to the file using a preorder traversal. 
-		 * write a separate recursive method that builds a string and hands it back??
-		 * You can use a 0 or 1 bit to differentiate between internal nodes and leaves, for example. 
-		 * The leaves must store character values (in the general case using 9-bits because of the pseudo-eof character).
-		*/ 
-		/*
-		private static void serializeTree(HuffmanNode node) throws FileNotFoundException, IOException {
-        final BitSet bitSet = new BitSet();
-        try (ObjectOutputStream oosTree = new ObjectOutputStream(new FileOutputStream("/Users/ap/Desktop/tree"))) {
-            try (ObjectOutputStream oosChar = new ObjectOutputStream(new FileOutputStream("/Users/ap/Desktop/char"))) {
-                IntObject o = new IntObject();
-                preOrder(node, oosChar, bitSet, o);
-                bitSet.set(o.bitPosition, true); // padded to mark end of bit set relevant for deserialization.
-                oosTree.writeObject(bitSet);
-            }
-        }
-    }
-		 */
-		 try {
-			 if(out !=null){
-				 BitSet binary = new BitSet(); //bitset representing the binary value of the existing bits
-				 String header = (stringTree(treeMaker.getRoot(), new StringBuffer())).toString();
-				 binary= getBitSet(header);
-				 System.out.println("This is the header: ");
-				 
-				for(int k = 0; k<binary.length(); k++){
-					if(binary.get(k)==true){
-						out.write(1);
-						System.out.println("1");
-					}
-					else{
-						out.write(0);
-						System.out.println("0");
-					}
-				}
-				System.out.println("This is the end of the header.");
-			 }
-		} catch (NumberFormatException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		 
-		 
-		 /*
-			 *Write the bits needed to encode each character of the input file. 
-			 *For example, if the coding for 'a' is "01011" then your code will have to write 5 bits, 
-			 *in the order 0, 1, 0, 1, 1 every time the program is compressing/encoding the chunk 'a'.
-			 *
-			 *
-			 *read each character from the file
-			 *get coding from arraylist.get(char)
-			 *write in coding
-			 *continue until end of file
-			 */
-		 /*
-		  * 
-		  */
-		 StringBuilder outString = new StringBuilder();
-		 int b = stream.available();
-		 System.out.println("Stream.available(): " + b);
-		 HuffEncoder encoder = new HuffEncoder();
-	     encoder.makeTable(treeMaker);
-		 for(int k = 0; k<b; k++){
-			 
-		     int nextByte = stream.read();
-		     System.out.println("next byte is: " + nextByte);
-		     String code = encoder.getCode(nextByte);
-		     outString.append(code);
-		     System.out.println("code for byte: " + code);
-			 //byte[] optimalEncoding = encoding.getBytes();
-			 
-		 }
-		 BitSet codeString = getBitSet(outString.toString());
-		 System.out.println("Compressed file: ");
-		 for(int k = 0; k< codeString.length(); k++){
-			 if(codeString.get(k)==true){
-					out.write(1);
-					System.out.print("1");
-				}
-				else{
-					out.write(0);
-					System.out.print("0");
-				} 
-		 }
-		 
-		 
-		 out.write(IHuffConstants.PSEUDO_EOF);
-		 System.out.println(IHuffConstants.PSEUDO_EOF);
-		 
-		 
-		//out.close();
+		BitOutputStream bits = new BitOutputStream(file.getName());
+    	bits.write(BITS_PER_INT,MAGIC_NUMBER);
+    	int start;
+    	for(start = 0; start < EOF+1; start++)
+    	{
+    		if(charCounter.getCount(start) != 0)
+    		{
+    			bits.write(BITS_PER_INT, start);
+    			bits.write(BITS_PER_INT, charCounter.getCount(start));
+    		}
+    	}
+    	while((start = stream.read()) != -1)
+    	{
+    			bits.write(nodeTable[start].getCount(), nodeTable[start].getBits());
+    	}
+    	bits.write(nodeTable[EOF].getCount(),nodeTable[EOF].getBits());
+    	bits.close();
 		}catch(IOException e){
-			System.out.println(e.toString());
-		}
-	
-		
+			e.printStackTrace();
+		}	
 	}
-	
-	/*
-	private static void serializeMessage(String message) throws IOException {
-        final BitSet bitSet = getBitSet(message);
-        bitSet.
-
-        try{
-        	FileOutputStream oos = new FileOutputStream("Test.txt");
-        	 oos.write(bitSet);
-        }catch(IOException e){
-  
-        } 
-    }
-    */
 	
 	private static BitSet getBitSet(String message) {
         final BitSet bitSet = new BitSet();
@@ -254,41 +153,91 @@ public class HuffModel implements IHuffModel{
 		view = viewer;
 	}
 	
-	public void uncompress(InputStream in, OutputStream out){
-		/*
-		 * read magic number
-		 */
-		int magic = 0;
-		try{
-	     magic = in.read();
-		}catch(IOException e){
-			System.out.println(e.toString());
+	/**
+     * Uncompress a previously compressed file.
+     * @param in is the compressed file to be uncompressed
+     * @param out is where the uncompressed bits will be written
+     */
+    public void uncompress(InputStream in, OutputStream out){ 
+    	try{
+    	BitInputStream bits = new BitInputStream(in);
+    	int magic = bits.read(BITS_PER_INT);
+    	if( magic != MAGIC_NUMBER)
+    	{
+    		System.out.println("Bad Magic Number");
+    		return;
+    	}
+    	for(int start = 0; start < EOF + 1; start++)
+    		charCounter.set(start,0);
+    	while(true)
+    	{
+    		int value = bits.read(BITS_PER_INT);
+    		int count = bits.read(BITS_PER_INT);
+    		charCounter.set(value,count);
+    		if(value == EOF)
+    			break;
+    	}
+    	buildHuffTree();
+    	
+    	while(true)
+    	{
+    		TreeNode node = (TreeNode)encodings.peek();
+    		while(true)
+    		{
+    			int bit = bits.read(1);
+    			if(bit!=0)
+    				node = node.getRight();
+    			else
+    				node = node.getLeft();
+    			if(!node.isLeaf())
+    				continue;
+    			if(node.getValue() == EOF)
+    			{
+    				out.close();
+    				return;
+    			}
+    			out.write(node.getValue());
+    			break;
+    		}
+    		
+    	}
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    		
+    }
+    
+    public void RecurseAndCompute(TreeNode tree, int bits, int count)
+    {
+    	if(tree.isLeaf())
+    	{
+    		nodeTable[tree.getValue()] = new SimpleTreeNode();
+    		nodeTable[tree.getValue()].SetBits(bits);
+    		nodeTable[tree.getValue()].SetCount(count);
+    		return;		
+    	}
+    	RecurseAndCompute(tree.getLeft(),bits << 1,count+1);
+    	RecurseAndCompute(tree.getRight(),(bits << 1) +1,count+1);
+    }
+    
+    public void buildHuffTree()
+    {
+    	encodings= new PriorityQueue();
+    	for(int start = 0; start < EOF+1;start++)
+		{
+			if(charCounter.getCount(start) != 0 )
+				encodings.add(new TreeNode(start,charCounter.getCount(start)));
 		}
-	     if (magic != MAGIC_NUMBER){
-	    	 try {
-				throw new IOException("magic number not right");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} //sometimes eclipse is pretty sick
-	     }
-	     
-	     
-		/* 
-		 * read tree, construct tree
-		 */ 
-	     
-		 /* 
-		 * follow tree w binary
-		 * every time you hit a leaf
-		 * write char in 
-		 * continue until u hit pseudo eof
-		 * leave 
-		 */
-		
+		while(encodings.size() > 1)
+		{
+			TreeNode smallest = (TreeNode)encodings.remove();
+			TreeNode nextsmallest = (TreeNode)encodings.remove();
+			encodings.add(new TreeNode(smallest,nextsmallest));
+		}
+		RecurseAndCompute((TreeNode)encodings.peek(),0,0);
+    }
 		
 		
 		
 	}
 
-}
